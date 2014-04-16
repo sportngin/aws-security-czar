@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Ec2SecurityCzar::VERSION
   spec.authors       = ["Ian Ehlert"]
   spec.email         = ["ehlertij@gmail.com"]
-  spec.summary       = %q{TODO: Write a short summary. Required.}
-  spec.description   = %q{TODO: Write a longer description. Optional.}
+  spec.summary       = %q{AWS EC2 security group rule manager.}
+  spec.description   = %q{Manages your EC2 security groups using YAML config files.}
   spec.homepage      = ""
   spec.license       = "MIT"
 
