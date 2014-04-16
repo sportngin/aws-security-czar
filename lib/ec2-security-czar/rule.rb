@@ -1,4 +1,4 @@
-module GuardhouseFirewallManager
+module Ec2SecurityCzar
   class Rule
 
     attr_accessor :protocol, :port_range, :ip, :egress

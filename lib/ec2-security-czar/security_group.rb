@@ -1,5 +1,4 @@
 require 'yaml'
-require 'pp'
 
 module Ec2SecurityCzar
   class SecurityGroup
