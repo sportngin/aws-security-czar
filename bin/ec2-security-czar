@@ -1,0 +1,5 @@
+#! /usr/bin/env ruby
+require 'ec2-security-czar'
+
+manager = Ec2SecurityCzar::Base.new
+manager.update_rules
