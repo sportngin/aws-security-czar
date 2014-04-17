@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["ehlertij@gmail.com"]
   spec.summary       = %q{Rule manager for EC2 Security Groups.}
   spec.description   = %q{Manages your EC2 security groups using YAML config files.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/sportngin/ec2-security-czar"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0")
