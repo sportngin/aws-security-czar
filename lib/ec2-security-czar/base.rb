@@ -34,7 +34,7 @@ module Ec2SecurityCzar
     def mfa_auth(keys, mfa_token)
       raise MFATokenMissing unless mfa_token
       sts = AWS::STS.new(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key])
-      session = sts.new_session(duration: 3600, serial_number: keys[:mfa_serial_number], token_code: mfa_token)
+      session = sts.new_session(duration: 300, serial_number: keys[:mfa_serial_number], token_code: mfa_token)
       AWS::EC2.new(session.credentials)
     rescue MFATokenMissing
       puts "MFA token is required as an argument!"
