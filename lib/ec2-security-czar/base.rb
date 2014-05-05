@@ -14,8 +14,13 @@ module Ec2SecurityCzar
         @ec2 = AWS.ec2
       end
     rescue StandardError => e
-      puts e.class
-      puts e.message
+      case
+      when e.class == Ec2SecurityCzar::MFATokenMissing
+        puts "MFA token is required as an argument!"
+      else
+        puts e.class
+        puts e.message
+      end
       exit 1
     end
 
@@ -36,15 +41,8 @@ module Ec2SecurityCzar
       sts = AWS::STS.new(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key])
       session = sts.new_session(duration: keys[:mfa_duration] || 900, serial_number: keys[:mfa_serial_number], token_code: mfa_token)
       AWS::EC2.new(session.credentials)
-    rescue MFATokenMissing
-      puts "MFA token is required as an argument!"
-      exit 1
-    rescue AWS::STS::Errors::AccessDenied
-      puts "Multifactor Authentication failed."
-      exit 1
     end
   end
 
-  class MFATokenMissing < StandardError
-  end
+  MFATokenMissing = Class.new StandardError
 end
