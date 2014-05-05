@@ -14,14 +14,7 @@ module Ec2SecurityCzar
         @ec2 = AWS.ec2
       end
     rescue StandardError => e
-      case
-      when e.class == Ec2SecurityCzar::MFATokenMissing
-        puts "MFA token is required as an argument!"
-      else
-        puts e.class
-        puts e.message
-      end
-      exit 1
+      handle_error e
     end
 
     def update_rules
@@ -29,6 +22,8 @@ module Ec2SecurityCzar
         security_group = SecurityGroup.new sg
         security_group.update_rules
       end
+    rescue StandardError => e
+      handle_error(e)
     end
 
     def security_groups
@@ -41,6 +36,17 @@ module Ec2SecurityCzar
       sts = AWS::STS.new(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key])
       session = sts.new_session(duration: keys[:mfa_duration] || 900, serial_number: keys[:mfa_serial_number], token_code: mfa_token)
       AWS::EC2.new(session.credentials)
+    end
+
+    def handle_error(e)
+      case
+      when e.class == Ec2SecurityCzar::MFATokenMissing
+        puts "MFA token is required as an argument!"
+      else
+        puts e.class
+        puts e.message
+      end
+      exit 1
     end
   end
 
