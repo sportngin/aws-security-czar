@@ -12,14 +12,25 @@ module Ec2SecurityCzar
 
     def update_rules
       if rules_config
+        puts "================================================="
         puts "Applying changes for #{api.name}:"
+        puts "================================================="
+
+        # Apply deletions first
+        rules_diff
+        [:outbound, :inbound].each do |direction|
+          diff[:deletions][direction].each{ |rule| rule.revoke! }
+        end
+
+        # Re-calculate the diff after performing deletions to make sure we add
+        # back any that got removed because of the way AWS groups rules together.
         rules_diff
         [:outbound, :inbound].each do |direction|
           diff[:additions][direction].each{ |rule| rule.authorize!(api) }
-          diff[:deletions][direction].each{ |rule| rule.revoke!(api) }
         end
+        puts "\n"
       else
-        puts "No config file for #{api.name}, skipping..."
+        puts "No config file for #{api.name}, skipping...\n\n"
       end
     end
 
