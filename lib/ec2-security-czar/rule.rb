@@ -16,6 +16,7 @@ module Ec2SecurityCzar
       rule.protocol.to_s == protocol.to_s &&
       Array(rule.port_range) == Array(port_range) &&
       rule.ip == ip &&
+      rule.group == group &&
       rule.egress == egress
     end
 
@@ -24,10 +25,11 @@ module Ec2SecurityCzar
     end
 
     def authorize!(security_group_api)
+      sources = ip.nil? ? { group_id: group } : ip
       if egress
-        security_group_api.authorize_egress((ip || group), protocol: protocol, ports: port_range)
+        security_group_api.authorize_egress(sources, protocol: protocol, ports: port_range)
       else
-        security_group_api.authorize_ingress(protocol, port_range, (ip || group))
+        security_group_api.authorize_ingress(protocol, port_range, sources)
       end
       puts "Authorized: #{to_s}"
     rescue StandardError => e
