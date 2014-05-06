@@ -19,7 +19,7 @@ module Ec2SecurityCzar
         # Apply deletions first
         rules_diff
         [:outbound, :inbound].each do |direction|
-          diff[:deletions][direction].each{ |rule| rule.revoke!(api) }
+          diff[:deletions][direction].each{ |rule| rule.revoke! }
         end
 
         # Re-calculate the diff after performing deletions to make sure we add

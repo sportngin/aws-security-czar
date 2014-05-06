@@ -23,11 +23,11 @@ module Ec2SecurityCzar
       inspect
     end
 
-    def authorize!(api)
+    def authorize!(security_group_api)
       if egress
-        api.authorize_egress((ip || group), protocol: protocol, ports: port_range)
+        security_group_api.authorize_egress((ip || group), protocol: protocol, ports: port_range)
       else
-        api.authorize_ingress(protocol, port_range, (ip || group))
+        security_group_api.authorize_ingress(protocol, port_range, (ip || group))
       end
       puts "Authorized: #{to_s}"
     rescue StandardError => e
@@ -35,7 +35,7 @@ module Ec2SecurityCzar
       puts to_s
     end
 
-    def revoke!(api)
+    def revoke!
       @api_object.revoke
       puts "Revoked: #{to_s}"
     rescue StandardError => e
@@ -50,7 +50,7 @@ module Ec2SecurityCzar
           Rule.new(ip_range: ip, port_range: api_rule.port_range, protocol: api_rule.protocol, direction: direction, api_object: api_rule)
         end
         rules << api_rule.groups.map do |group|
-          Rule.new(groups: group.id, port_range: api_rule.port_range, protocol: api_rule.protocol, direction: direction, api_object: api_rule)
+          Rule.new(group: group.id, port_range: api_rule.port_range, protocol: api_rule.protocol, direction: direction, api_object: api_rule)
         end
       end
       rules.flatten
