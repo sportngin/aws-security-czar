@@ -7,7 +7,7 @@ module Ec2SecurityCzar
 
     def initialize(mfa_token=nil)
       keys = YAML.load_file('config/aws_keys.yml')
-      AWS.config(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key], region: "us-east-1")
+      AWS.config(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key], region: keys[:region] || "us-east-1")
       if keys[:mfa_serial_number]
         @ec2 = mfa_auth(keys, mfa_token)
       else
