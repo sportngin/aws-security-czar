@@ -17,3 +17,11 @@ RSpec.configure do |config|
   config.order = 'random'
   config.color_enabled = true
 end
+
+require 'rspec/expectations'
+
+RSpec::Matchers.define :be_an_array_of do |klass|
+  match do |array|
+    array.is_a?(Array) && !array.empty? && array.all?{|e| e.is_a?(klass) }
+  end
+end
