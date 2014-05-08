@@ -88,7 +88,34 @@ module Ec2SecurityCzar
 
     context ".rules_from_api" do
       subject { Rule }
+      let(:rules) { [double(port_range: 123, protocol: :tcp, ip_ranges: ['0.0.0.0/0'], groups: [double(id: 'sec-group')])] }
+      let(:direction) { :outbound }
 
+      it "returns an array of rules" do
+        expect(subject.rules_from_api(rules, direction)).to be_an_array_of(Rule)
+      end
+    end
+
+    context ".rules_from_api" do
+      subject { Rule }
+      let(:api_rule) { double(port_range: 123, protocol: :tcp, ip_ranges: ['0.0.0.0/0'], groups: [double(id: 'sec-group')]) }
+      let(:rules) { [api_rule] }
+      let(:direction) { :outbound }
+
+      it "returns an array of rules" do
+        expect(subject.rules_from_api(rules, direction)).to be_an_array_of(Rule)
+      end
+    end
+
+    context ".rules_from_config" do
+      subject { Rule }
+      let(:config_rule) { { port_range: 123, protocol: :tcp, ip_ranges: ['0.0.0.0/0'], groups: [double(id: 'sec-group')] } }
+      let(:direction) { :outbound }
+      let(:rules) { {outbound: [config_rule]} }
+
+      it "returns an array of rules" do
+        expect(subject.rules_from_config(rules, direction)).to be_an_array_of(Rule)
+      end
     end
   end
 end
