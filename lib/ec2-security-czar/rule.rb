@@ -20,10 +20,6 @@ module Ec2SecurityCzar
       rule.egress == egress
     end
 
-    def to_s
-      inspect
-    end
-
     def authorize!(security_group_api)
       sources = ip.nil? ? { group_id: group } : ip
       if egress
@@ -31,18 +27,18 @@ module Ec2SecurityCzar
       else
         security_group_api.authorize_ingress(protocol, port_range, sources)
       end
-      puts "Authorized: #{to_s}"
+      puts "Authorized: #{inspect}"
     rescue StandardError => e
       puts "#{e.class} - #{e.message}"
-      puts to_s
+      puts inspect
     end
 
     def revoke!
       @api_object.revoke
-      puts "Revoked: #{to_s}"
+      puts "Revoked: #{inspect}"
     rescue StandardError => e
       puts "#{e.class} - #{e.message}"
-      puts to_s
+      puts inspect
     end
 
     def self.rules_from_api(api_rules, direction)
