@@ -34,6 +34,8 @@ module Ec2SecurityCzar
       end
     end
 
+    private
+
     def rules_diff
       @diff = { deletions: {}, additions: {} }
 
@@ -50,10 +52,9 @@ module Ec2SecurityCzar
       diff
     end
 
-    private
     def load_rules
       if File.exists? config_filename
-        @rules_config = YAML.load_file("config/#{api.name}.yml")
+        @rules_config = YAML.load_file(config_filename)
       end
     end
 
@@ -62,7 +63,7 @@ module Ec2SecurityCzar
     end
 
     def rule_exists?(direction, current_rule)
-      @diff[:additions][direction].reject!{ |rules| rules.equal?(current_rule) }
+      @diff[:additions][direction].reject!{ |rule| rule.equal?(current_rule) }
     end
 
     def current_rules(direction)
