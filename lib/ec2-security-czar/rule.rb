@@ -21,7 +21,7 @@ module Ec2SecurityCzar
     end
 
     def authorize!(security_group_api)
-      sources = ip || group
+      sources = ip.nil? ? { group_id: group } : ip
       if egress
         security_group_api.authorize_egress(sources, protocol: protocol, ports: port_range)
       else

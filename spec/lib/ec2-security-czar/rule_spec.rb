@@ -37,14 +37,20 @@ module Ec2SecurityCzar
       end
 
       context "rule with group name to a group id" do
-        let(:group_options) { options.reject{|k| k == :ip_range} }
         let(:group_name) { 'sec-group-name' }
-
-        subject { Rule.new(group_options.merge(group: { group_id: group[:group_id]})) }
+        let(:options) {
+          {
+            direction: direction,
+            group: group,
+            protocol: protocol,
+            port_range: port_range,
+            api_object: api_object,
+          }
+        }
 
         it "returns true if the group ids are the same" do
           allow(SecurityGroup).to receive(:name_lookup).with(group_name).and_return(group[:group_id])
-          equivalent_rule = Rule.new(group_options.merge(group: { group_name: group_name }))
+          equivalent_rule = Rule.new(options.merge(group: { group_name: group_name }))
           expect(subject.equal?(equivalent_rule)).to be_truthy
         end
       end
@@ -76,6 +82,27 @@ module Ec2SecurityCzar
         it "does not authorize an egress rule for aws" do
           allow(security_group_api).to receive(:authorize_ingress)
           expect(security_group_api).to_not receive(:authorize_egress)
+          subject.authorize!(security_group_api)
+        end
+      end
+
+      context "group rule" do
+        let(:direction) { :inbound }
+        let(:group_id) { 'sec-group' }
+        let(:options) {
+          {
+            direction: direction,
+            group: { group_id: group_id },
+            protocol: protocol,
+            port_range: port_range,
+            api_object: api_object,
+          }
+        }
+
+        it "passes the group_id as a hash" do
+          expect(security_group_api).to receive(:authorize_ingress).with(
+            protocol, port_range, { group_id: group_id }
+          )
           subject.authorize!(security_group_api)
         end
       end
