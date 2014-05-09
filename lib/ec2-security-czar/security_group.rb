@@ -1,4 +1,5 @@
 require 'yaml'
+require 'erb'
 
 module Ec2SecurityCzar
   class SecurityGroup
@@ -54,7 +55,7 @@ module Ec2SecurityCzar
 
     def load_rules
       if File.exists? config_filename
-        @rules_config = YAML.load_file(config_filename)
+        @rules_config = YAML.load(ERB.new(File.read(config_filename)).result)
       end
     end
 
