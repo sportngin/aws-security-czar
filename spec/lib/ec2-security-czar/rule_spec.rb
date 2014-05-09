@@ -35,6 +35,19 @@ module Ec2SecurityCzar
         bogus_rule = Rule.new(options.merge(ip_range: '1.1.1.1/32'))
         expect(subject.equal?(bogus_rule)).to be_falsey
       end
+
+      context "rule with group name to a group id" do
+        let(:group_options) { options.reject{|k| k == :ip_range} }
+        let(:group_name) { 'sec-group-name' }
+
+        subject { Rule.new(group_options.merge(group: { group_id: group[:group_id]})) }
+
+        it "returns true if the group ids are the same" do
+          allow(SecurityGroup).to receive(:name_lookup).with(group_name).and_return(group[:group_id])
+          equivalent_rule = Rule.new(group_options.merge(group: { group_name: group_name }))
+          expect(subject.equal?(equivalent_rule)).to be_truthy
+        end
+      end
     end
 
     context "#authorize!" do
