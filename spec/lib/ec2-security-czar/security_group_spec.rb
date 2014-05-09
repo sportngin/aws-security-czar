@@ -25,12 +25,16 @@ module Ec2SecurityCzar
 
     let(:rules_config) { { outbound: [outbound_rule], inbound: [inbound_rule] } }
     let(:filename) { 'the/config/file' }
+    let(:file) { double("Raw File") }
+    let(:parsed_file) { double("Parsed File") }
 
     subject { SecurityGroup.new(api) }
 
     before do
       allow_any_instance_of(SecurityGroup).to receive(:config_filename).and_return(filename)
-      allow(YAML).to receive(:load_file).with(filename).and_return(rules_config)
+      allow(YAML).to receive(:load).with(parsed_file).and_return(rules_config)
+      allow(ERB).to receive(:new).and_return(double(:result => parsed_file))
+      allow(File).to receive(:read).and_return(double(:result => file))
       allow(File).to receive(:exists?).with(filename).and_return(true)
       allow(subject).to receive(:puts)
     end
