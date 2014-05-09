@@ -6,7 +6,7 @@ module Ec2SecurityCzar
     def initialize(options)
       @egress = options[:direction] == :outbound
       @ip = options[:ip_range]
-      @group = options[:group]
+      @group = group_id(options[:group])
       @protocol = options[:protocol] || :tcp
       @port_range = options[:port_range] || (0..65535)
       @api_object = options[:api_object]
@@ -21,7 +21,7 @@ module Ec2SecurityCzar
     end
 
     def authorize!(security_group_api)
-      sources = ip.nil? ? { group_id: group } : ip
+      sources = ip || group
       if egress
         security_group_api.authorize_egress(sources, protocol: protocol, ports: port_range)
       else
@@ -39,6 +39,14 @@ module Ec2SecurityCzar
     rescue StandardError => e
       puts "#{e.class} - #{e.message}"
       puts inspect
+    end
+
+    def group_id(group)
+      if group.is_a? Hash
+        group[:group_id] || SecurityGroup.name_lookup(group[:group_name])
+      else
+        group
+      end
     end
 
     def self.rules_from_api(api_rules, direction)

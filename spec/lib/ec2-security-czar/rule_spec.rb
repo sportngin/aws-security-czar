@@ -1,11 +1,12 @@
 require 'spec_helper.rb'
 require 'ec2-security-czar/rule'
+require 'ec2-security-czar/security_group'
 
 module Ec2SecurityCzar
   describe Rule do
     let(:direction) { :outbound }
     let(:ip_range) { '0.0.0.0/0' }
-    let(:group) { 'sec-group' }
+    let(:group) { { group_id: 'sec-group' } }
     let(:protocol) { :tcp }
     let(:port_range) { '666' }
     let(:api_object) { double }
@@ -83,6 +84,32 @@ module Ec2SecurityCzar
         allow(api_object).to receive(:revoke).and_raise(StandardError)
         expect(subject).to receive(:puts).twice
         expect { subject.revoke! }.to_not raise_error
+      end
+    end
+
+    context "#group_id" do
+      context "given a string" do
+        let(:group) { "sec-group" }
+        it "returns the passed in string as the security group id" do
+          expect(subject.group_id(group)).to equal(group)
+        end
+      end
+
+      context "given a hash with group_id" do
+        let(:group) { { group_id: "sec-group" } }
+        it "returns the group id" do
+          expect(subject.group_id(group)).to equal(group[:group_id])
+        end
+      end
+
+      context "given a hash with group_name" do
+        let(:group) { { group_name: "sec-group-name" } }
+        let(:group_id) { "sec-group" }
+        let(:group_hash) { { "sec-group-name" => group_id } }
+        it "returns the matching group id" do
+          allow(SecurityGroup).to receive(:name_lookup).with(group[:group_name]).and_return(group_id)
+          expect(subject.group_id(group)).to equal(group_id)
+        end
       end
     end
 
