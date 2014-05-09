@@ -145,7 +145,6 @@ module Ec2SecurityCzar
       context "given a hash with group_name" do
         let(:group) { { group_name: "sec-group-name" } }
         let(:group_id) { "sec-group" }
-        let(:group_hash) { { "sec-group-name" => group_id } }
         it "returns the matching group id" do
           allow(SecurityGroup).to receive(:name_lookup).with(group[:group_name]).and_return(group_id)
           expect(subject.group_id(group)).to equal(group_id)
