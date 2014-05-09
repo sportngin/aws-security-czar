@@ -51,6 +51,7 @@ module Ec2SecurityCzar
     def self.security_groups
       @security_groups
     end
+    private_class_method :security_groups
 
     def rules_diff
       @diff = { deletions: {}, additions: {} }
