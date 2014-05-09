@@ -27,7 +27,7 @@ module Ec2SecurityCzar
     end
 
     def security_groups
-      ec2.security_groups
+      SecurityGroup.from_api(ec2)
     end
 
     private

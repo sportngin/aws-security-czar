@@ -35,7 +35,24 @@ module Ec2SecurityCzar
       end
     end
 
+    def self.from_api(ec2)
+      @security_groups ||= ec2.security_groups
+    end
+
+    def self.name_lookup(name)
+      @security_group_hash ||= security_groups.inject({}) do |hash, security_group|
+        hash[security_group.name] = security_group.id
+        hash
+      end
+      @security_group_hash[name]
+    end
+
     private
+
+    def self.security_groups
+      @security_groups
+    end
+    private_class_method :security_groups
 
     def rules_diff
       @diff = { deletions: {}, additions: {} }

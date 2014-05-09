@@ -78,8 +78,8 @@ module Ec2SecurityCzar
     end
 
     context "#security_groups" do
-      it "delegates to the ec2 object" do
-        expect(ec2).to receive(:security_groups)
+      it "delegates to the SecurityGroup class" do
+        expect(SecurityGroup).to receive(:from_api).with(ec2)
         subject.security_groups
       end
     end
