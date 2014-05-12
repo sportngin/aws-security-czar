@@ -1,5 +1,34 @@
 #! /usr/bin/env ruby
+require 'rubygems'
+require 'gli'
 require 'ec2_security_czar'
 
-manager = Ec2SecurityCzar::Base.new(ARGV[0])
-manager.update_rules
+include GLI::App
+
+program_desc 'Command Line Ec2 Security Group Manager'
+version Ec2SecurityCzar::VERSION
+
+wrap_help_text :verbatim
+
+switch :verbose, :desc => 'Enable Verbose mode for more logging', :negatable => false
+switch :debug, :desc => 'Enable Debug mode for detailed logs and backtraces', :negatable => false
+
+pre do |global_options, command, options, args|
+  $verbose = global_options[:verbose]
+  $debug = global_options[:debug]
+  ENV['GLI_DEBUG'] = $debug.to_s
+  true
+end
+
+desc "Update your ec2 security groups"
+arg_name '<environment>'
+command :update do |c|
+  c.flag [:t, :token], :desc => "AWS MFA Auth Token, Requires mfa_serial_number to be set in the aws config"
+  c.action do |global_options, options, args|
+   Ec2SecurityCzar::Base.new(args.first, global_options.merge(options)).update_rules
+  end
+end
+
+default_command :help
+
+exit run(ARGV)
