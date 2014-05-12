@@ -79,5 +79,22 @@ module Ec2SecurityCzar
       end
     end
 
+    context ".name_lookup" do
+      let(:security_group_name) { 'sec-group-name' }
+      let(:security_group_id) { 'sec-group' }
+      let(:security_groups) { [instance_double("AWS::EC2::SecurityGroup", name: security_group_name, id: security_group_id)] }
+      it "returns the group id corresponding to the group name" do
+        allow(SecurityGroup).to receive(:security_groups).and_return(security_groups)
+        expect(SecurityGroup.name_lookup(security_group_name)).to equal(security_group_id)
+      end
+    end
+
+    context ".from_api" do
+      let(:ec2) { double }
+      it "delegates to the ec2 object" do
+        expect(ec2).to receive(:security_groups)
+        SecurityGroup.from_api(ec2)
+      end
+    end
   end
 end
