@@ -1,7 +1,12 @@
 require 'yaml'
 require 'erb'
+require 'hashie'
 
 module Ec2SecurityCzar
+  class SecurityGroupConfig < Hash
+    include Hashie::Extensions::IndifferentAccess
+  end
+
   class SecurityGroup
 
     attr_accessor :api, :rules_config, :diff
@@ -73,8 +78,8 @@ module Ec2SecurityCzar
 
     def load_rules
       if File.exists? config_filename
-         environment = @environment
-        @rules_config = YAML.load(ERB.new(File.read(config_filename)).result(binding))
+        environment = @environment
+        @rules_config = SecurityGroupConfig[YAML.load(ERB.new(File.read(config_filename)).result(binding))]
       end
     end
 
@@ -96,4 +101,5 @@ module Ec2SecurityCzar
     end
 
   end
+
 end
