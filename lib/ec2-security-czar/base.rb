@@ -1,7 +1,12 @@
 require 'aws-sdk'
 require 'yaml'
+require 'hashie'
 
 module Ec2SecurityCzar
+  class AwsConfig < Hash
+    include Hashie::Extensions::IndifferentAccess
+  end
+
   class Base
     attr_accessor :ec2
 
@@ -30,7 +35,7 @@ module Ec2SecurityCzar
 
     def load_config
       return @config if @config
-      @config = YAML.load_file(config_filename)
+      @config = AwsConfig[YAML.load_file(config_filename)]
       @config = @config[@environment] if @environment
       @config[:region] ||= 'us-east-1'
       @config

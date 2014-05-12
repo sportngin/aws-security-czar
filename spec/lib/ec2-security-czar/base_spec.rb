@@ -68,6 +68,7 @@ module Ec2SecurityCzar
         end
 
         it "loads the config for the passed environment" do
+          expect(AwsConfig).to receive(:[]).with(environment_conf).and_return(environment_conf)
           expect(environment_conf).to receive(:[]).with(environment).and_return(aws_conf)
           subject.new(environment)
         end
