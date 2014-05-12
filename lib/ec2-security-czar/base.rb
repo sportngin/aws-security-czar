@@ -5,16 +5,16 @@ module Ec2SecurityCzar
   class Base
     attr_accessor :ec2
 
-    def initialize(mfa_token=nil)
-      keys = YAML.load_file('config/aws_keys.yml')
-      AWS.config(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key], region: keys[:region] || "us-east-1")
-      if keys[:mfa_serial_number]
-        @ec2 = mfa_auth(keys, mfa_token)
+    def initialize(environment=nil, args={})
+      raise MissingConfig.new("Missing aws_keys.yml config file") unless File.exists?(config_filename)
+      @environment = environment
+      load_config
+      AWS.config(access_key_id: @config[:access_key], secret_access_key: @config[:secret_key], region: @config[:region])
+      if @config[:mfa_serial_number]
+        @ec2 = mfa_auth(args[:token])
       else
         @ec2 = AWS.ec2
       end
-    rescue StandardError => e
-      handle_error e
     end
 
     def update_rules
@@ -22,33 +22,33 @@ module Ec2SecurityCzar
         security_group = SecurityGroup.new sg
         security_group.update_rules
       end
-    rescue StandardError => e
-      handle_error(e)
     end
 
     def security_groups
       ec2.security_groups
     end
 
+    def load_config
+      return @config if @config
+      @config = YAML.load_file(config_filename)
+      @config = @config[@environment] if @environment
+      @config[:region] ||= 'us-east-1'
+      @config
+    end
+
     private
-    def mfa_auth(keys, mfa_token)
-      raise MFATokenMissing unless mfa_token
-      sts = AWS::STS.new(access_key_id: keys[:access_key], secret_access_key: keys[:secret_key])
-      session = sts.new_session(duration: keys[:mfa_duration] || 900, serial_number: keys[:mfa_serial_number], token_code: mfa_token)
+    def mfa_auth(mfa_token)
+      raise MFATokenMissing.new("MFA token is required as an argument!") unless mfa_token
+      sts = AWS::STS.new(access_key_id: @config[:access_key], secret_access_key: @config[:secret_key])
+      session = sts.new_session(duration: @config[:mfa_duration] || 900, serial_number: @config[:mfa_serial_number], token_code: mfa_token)
       AWS::EC2.new(session.credentials)
     end
 
-    def handle_error(e)
-      case
-      when e.class == Ec2SecurityCzar::MFATokenMissing
-        puts "MFA token is required as an argument!"
-      else
-        puts e.class
-        puts e.message
-      end
-      exit 1
+    def config_filename
+      'config/aws_keys.yml'
     end
   end
 
-  MFATokenMissing = Class.new StandardError
+  MFATokenMissing = Class.new(StandardError)
+  MissingConfig = Class.new(StandardError)
 end
