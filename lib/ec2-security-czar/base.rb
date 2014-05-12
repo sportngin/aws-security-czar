@@ -19,7 +19,7 @@ module Ec2SecurityCzar
 
     def update_rules
       security_groups.each do |sg|
-        security_group = SecurityGroup.new sg
+        security_group = SecurityGroup.new(sg, @environment)
         security_group.update_rules
       end
     end

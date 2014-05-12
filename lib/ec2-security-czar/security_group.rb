@@ -5,8 +5,9 @@ module Ec2SecurityCzar
 
     attr_accessor :api, :rules_config, :diff
 
-    def initialize(api)
+    def initialize(api, environment)
       @api = api
+      @environment = environment
       load_rules
     end
 
@@ -54,7 +55,8 @@ module Ec2SecurityCzar
 
     def load_rules
       if File.exists? config_filename
-        @rules_config = YAML.load(ERB.new(File.read(config_filename)).result)
+         environment = @environment
+        @rules_config = YAML.load(ERB.new(File.read(config_filename)).result(binding))
       end
     end
 
