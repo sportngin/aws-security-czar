@@ -25,18 +25,15 @@ module Ec2SecurityCzar
 
     let(:rules_config) { { outbound: [outbound_rule], inbound: [inbound_rule] } }
     let(:filename) { 'the/config/file' }
-    let(:file) { double("Raw File") }
-    let(:parsed_file) { double("Parsed File") }
+    let(:file) { "Raw File" }
+    let(:parsed_file) { { derp: :herp } }
+    let(:environment) { 'environment' }
 
-    subject { SecurityGroup.new(api) }
 
     before do
+      allow(File).to receive(:read).and_return(file)
       allow_any_instance_of(SecurityGroup).to receive(:config_filename).and_return(filename)
-      allow(YAML).to receive(:load).with(parsed_file).and_return(rules_config)
-      allow(ERB).to receive(:new).and_return(double(:result => parsed_file))
-      allow(File).to receive(:read).and_return(double(:result => file))
       allow(File).to receive(:exists?).with(filename).and_return(true)
-      allow(subject).to receive(:puts)
     end
 
     context "#update_rules" do
@@ -46,11 +43,16 @@ module Ec2SecurityCzar
       let(:addition_outbound) { double("Outbound rule to be added") }
 
       before do
+        allow(ERB).to receive(:new).and_return(double(:result => parsed_file))
+        allow(YAML).to receive(:load).and_return(parsed_file)
         allow(subject).to receive(:new_rules).with(:outbound).and_return([addition_outbound])
         allow(subject).to receive(:new_rules).with(:inbound).and_return([addition_inbound])
         allow(subject).to receive(:current_rules).with(:outbound).and_return([delete_outbound])
         allow(subject).to receive(:current_rules).with(:inbound).and_return([delete_inbound])
+        allow(subject).to receive(:puts)
       end
+
+      subject { SecurityGroup.new(api, environment) }
 
       it "revokes rules that have been deleted" do
         allow(addition_outbound).to receive(:authorize!)
@@ -66,6 +68,22 @@ module Ec2SecurityCzar
         expect(addition_outbound).to receive(:authorize!).with(api)
         expect(addition_inbound).to receive(:authorize!).with(api)
         subject.update_rules
+      end
+    end
+
+    context "#load_rules" do
+      let(:environment) { 'parsed' }
+      let(:erb_file) { "--- \nenvironment: <%= environment %> \n" }
+
+      before do
+        allow(File).to receive(:read).with(filename).and_return(erb_file)
+      end
+
+      subject { SecurityGroup.new(api, environment) }
+
+      it "passes the environment into the erb rendering" do
+        expect(SecurityGroupConfig).to receive(:[]).at_least(:once).with(hash_including('environment' => 'parsed'))
+        subject.send(:load_rules)
       end
     end
 
@@ -86,6 +104,5 @@ module Ec2SecurityCzar
         SecurityGroup.from_api(ec2)
       end
     end
-
   end
 end
