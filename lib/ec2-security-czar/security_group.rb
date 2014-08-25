@@ -41,8 +41,11 @@ module Ec2SecurityCzar
       end
     end
 
-    def self.from_api(ec2)
-      @security_groups ||= ec2.security_groups
+    def self.from_api(ec2, reload = nil)
+      if reload || @security_groups.nil?
+        @security_groups = ec2.security_groups
+      end
+      @security_groups
     end
 
     def self.name_lookup(name)
@@ -51,6 +54,17 @@ module Ec2SecurityCzar
         hash
       end
       @security_group_hash[name]
+    end
+
+    def self.config_security_groups
+      Dir["config/*.yml"].reject!{|file| file == "config/aws_keys.yml"}.map do |file|
+        File.basename(file,File.extname(file))
+      end
+    end
+
+    def self.missing_security_groups
+      missing_security_groups = config_security_groups - security_groups.map{|sg| sg[:name]}
+      missing_security_groups.empty? ? nil : missing_security_groups
     end
 
     private

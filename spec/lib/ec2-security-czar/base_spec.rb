@@ -16,6 +16,7 @@ module Ec2SecurityCzar
       stub_const("SecurityGroup", double("Security Group"))
       allow(AWS).to receive(:ec2).and_return(ec2)
       allow(AWS).to receive(:config)
+      allow(SecurityGroup).to receive(:missing_security_groups) {nil}
     end
 
     context ".new" do
@@ -44,7 +45,6 @@ module Ec2SecurityCzar
           subject.new
         end
         it "runs mfa auth" do
-          allow(AWS).to receive(:config)
           expect_any_instance_of(Base).to receive(:mfa_auth).with(mfa_token)
           subject.new(nil, token: mfa_token)
         end
@@ -85,9 +85,21 @@ module Ec2SecurityCzar
       end
     end
 
+    context "#create_missing_security_rules" do
+      let(:aws_security_groups) { double }
+
+      it "calls AWS.security_group.create" do
+        allow(SecurityGroup).to receive(:missing_security_groups).and_return([], ["foo_group"])
+        allow(AWS).to receive(:security_groups) {aws_security_groups}
+        expect(aws_security_groups).to receive(:create).with("foo_group")
+        allow_any_instance_of(Base).to receive(:security_groups)
+        subject.create_missing_security_groups
+      end
+    end
+
     context "#security_groups" do
       it "delegates to the SecurityGroup class" do
-        expect(SecurityGroup).to receive(:from_api).with(ec2)
+        expect(SecurityGroup).to receive(:from_api).with(ec2, nil)
         subject.security_groups
       end
     end

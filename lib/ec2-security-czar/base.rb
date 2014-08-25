@@ -20,6 +20,7 @@ module Ec2SecurityCzar
       else
         @ec2 = AWS.ec2
       end
+      create_missing_security_groups
     end
 
     def update_rules
@@ -29,8 +30,16 @@ module Ec2SecurityCzar
       end
     end
 
-    def security_groups
-      SecurityGroup.from_api(ec2)
+    def security_groups(reload = nil)
+      SecurityGroup.from_api(ec2, reload)
+    end
+
+    def create_missing_security_groups
+      missing_security_groups = SecurityGroup.missing_security_groups
+      if missing_security_groups
+        missing_security_groups.each{|msg| AWS.security_groups.create(msg)}
+        security_groups(true)
+      end
     end
 
     def load_config
