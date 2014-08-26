@@ -120,7 +120,7 @@ module Ec2SecurityCzar
       end
 
       it "returns groups in config_security_groups not in security_groups" do
-        allow(SecurityGroup).to receive(:security_groups).and_return([security_group_2g])
+        allow(SecurityGroup).to receive(:security_groups).and_return([security_group_2])
         expect(SecurityGroup.send(:missing_security_groups)).to eq(["foo"])
       end
     end
