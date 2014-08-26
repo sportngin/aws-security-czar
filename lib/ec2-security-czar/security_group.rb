@@ -41,11 +41,8 @@ module Ec2SecurityCzar
       end
     end
 
-    def self.from_api(ec2, reload = nil)
-      if reload || @security_groups.nil?
-        @security_groups = ec2.security_groups
-      end
-      @security_groups
+    def self.from_api(ec2)
+      @security_groups = ec2.security_groups
     end
 
     def self.name_lookup(name)
@@ -63,8 +60,7 @@ module Ec2SecurityCzar
     end
 
     def self.missing_security_groups
-      missing_security_groups = config_security_groups - security_groups.map{|sg| sg[:name]}
-      missing_security_groups.empty? ? nil : missing_security_groups
+      config_security_groups - security_groups.map{|sg| sg[:name]}
     end
 
     private

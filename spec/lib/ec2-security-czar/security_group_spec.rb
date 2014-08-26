@@ -112,7 +112,7 @@ module Ec2SecurityCzar
       it "returns nil if config_security_groups is the same as security_groups" do
         allow(SecurityGroup).to receive(:config_security_groups).and_return(["foo","bar"])
         allow(SecurityGroup).to receive(:security_groups).and_return([{:name => "foo"}, {:name => "bar"}])
-        expect(SecurityGroup.send(:missing_security_groups)).to eq(nil)
+        expect(SecurityGroup.send(:missing_security_groups)).to eq([])
       end 
 
       it "returns groups in config_security_groups not in security_groups" do
@@ -140,18 +140,6 @@ module Ec2SecurityCzar
       it "delegates to the ec2 object" do
         expect(ec2).to receive(:security_groups)
         SecurityGroup.from_api(ec2)
-      end
-
-      it "successfully memoizes security_groups" do
-        expect(ec2).to receive(:security_groups).and_return([]).once
-        SecurityGroup.from_api(ec2)
-        SecurityGroup.from_api(ec2)
-      end
-
-      it "successfully reloads security_groups when called with reload = true" do
-        expect(ec2).to receive(:security_groups).and_return([]).twice
-        SecurityGroup.from_api(ec2)
-        SecurityGroup.from_api(ec2, true)
       end
     end
   end

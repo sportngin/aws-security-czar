@@ -16,7 +16,7 @@ module Ec2SecurityCzar
       stub_const("SecurityGroup", double("Security Group"))
       allow(AWS).to receive(:ec2).and_return(ec2)
       allow(AWS).to receive(:config)
-      allow(SecurityGroup).to receive(:missing_security_groups) {nil}
+      allow(SecurityGroup).to receive(:missing_security_groups) {[]}
     end
 
     context ".new" do
@@ -99,7 +99,7 @@ module Ec2SecurityCzar
 
     context "#security_groups" do
       it "delegates to the SecurityGroup class" do
-        expect(SecurityGroup).to receive(:from_api).with(ec2, nil)
+        expect(SecurityGroup).to receive(:from_api).with(ec2)
         subject.security_groups
       end
     end
