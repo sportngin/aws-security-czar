@@ -60,7 +60,7 @@ module Ec2SecurityCzar
     end
 
     def self.missing_security_groups
-      config_security_groups - security_groups.map{|sg| sg[:name]}
+      config_security_groups - security_groups.map(&:name)
     end
 
     private

@@ -17,6 +17,7 @@ module Ec2SecurityCzar
       allow(AWS).to receive(:ec2).and_return(ec2)
       allow(AWS).to receive(:config)
       allow(SecurityGroup).to receive(:missing_security_groups) {[]}
+      allow(SecurityGroup).to receive(:from_api) {[]}
     end
 
     context ".new" do
@@ -90,7 +91,7 @@ module Ec2SecurityCzar
 
       it "calls AWS.security_group.create" do
         allow(SecurityGroup).to receive(:missing_security_groups).and_return([], ["foo_group"])
-        allow(AWS).to receive(:security_groups) {aws_security_groups}
+        allow(ec2).to receive(:security_groups) {aws_security_groups}
         expect(aws_security_groups).to receive(:create).with("foo_group")
         allow_any_instance_of(Base).to receive(:security_groups)
         subject.create_missing_security_groups

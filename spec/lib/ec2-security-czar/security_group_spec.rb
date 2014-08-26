@@ -101,26 +101,31 @@ module Ec2SecurityCzar
       end
     end
 
-    context "#missing_security_groups" do
-      let(:environment) { 'parsed' }
-      let(:erb_file) { "--- \nenvironment: <%= environment %> \n" }
+      context "#missing_security_groups" do
+        let(:environment) { 'parsed' }
+        let(:erb_file) { "--- \nenvironment: <%= environment %> \n" }
+        let(:foo) { double }
+        let(:bar) { double }
 
-      before do
-        allow(File).to receive(:read).with(filename).and_return(erb_file)
+        before do
+          allow(File).to receive(:read).with(filename).and_return(erb_file)
+          allow(bar).to receive(:name).and_return("bar")
+          allow(foo).to receive(:name).and_return("foo")
+        end
+
+        it "returns nil if config_security_groups is the same as security_groups" do
+          allow(SecurityGroup).to receive(:config_security_groups).and_return(["foo","bar"])
+          allow(SecurityGroup).to receive(:security_groups).and_return([foo, bar])
+          expect(SecurityGroup.send(:missing_security_groups)).to eq([])
+        end
+
+        it "returns groups in config_security_groups not in security_groups" do
+          allow(foo).to receive(:name).and_return("joop")
+          allow(SecurityGroup).to receive(:config_security_groups).and_return(["foo","bar"])
+          allow(SecurityGroup).to receive(:security_groups).and_return([foo, bar])
+          expect(SecurityGroup.send(:missing_security_groups)).to eq(["foo"])
+        end
       end
-
-      it "returns nil if config_security_groups is the same as security_groups" do
-        allow(SecurityGroup).to receive(:config_security_groups).and_return(["foo","bar"])
-        allow(SecurityGroup).to receive(:security_groups).and_return([{:name => "foo"}, {:name => "bar"}])
-        expect(SecurityGroup.send(:missing_security_groups)).to eq([])
-      end 
-
-      it "returns groups in config_security_groups not in security_groups" do
-        allow(SecurityGroup).to receive(:config_security_groups).and_return(["foo","bar"])
-        allow(SecurityGroup).to receive(:security_groups).and_return([{:name => "joop"}, {:name => "bar"}])
-        expect(SecurityGroup.send(:missing_security_groups)).to eq(["foo"])
-      end 
-    end
 
     context ".name_lookup" do
       let(:security_group_name) { 'sec-group-name' }

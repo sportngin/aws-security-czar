@@ -35,7 +35,8 @@ module Ec2SecurityCzar
     end
 
     def create_missing_security_groups
-      SecurityGroup.missing_security_groups.each{|msg| AWS.security_groups.create(msg)}
+      security_groups
+      SecurityGroup.missing_security_groups.each{|msg| ec2.security_groups.create(msg)}
     end
 
     def load_config
