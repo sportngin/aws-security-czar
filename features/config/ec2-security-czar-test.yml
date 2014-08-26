@@ -1,0 +1,39 @@
+---
+outbound:
+-
+  name: Security Group ID
+  protocol: :tcp
+  port_range: 3306
+  groups:
+  - sg-bed358db
+-
+  name: CIDR
+  protocol: :tcp
+  port_range: 443
+  ip_ranges:
+  - 10.0.0.1/32
+-
+  name: Multiple CIDRs
+  port_range: 22
+  ip_ranges:
+  - 10.0.1.1/32
+  - 10.0.1.2/32
+inbound:
+-
+  name: Security Group ID
+  protocol: :tcp
+  port_range: 3306
+  groups:
+  - sg-bed358db
+-
+  name: CIDR
+  protocol: :tcp
+  port_range: 443
+  ip_ranges:
+  - 10.0.0.1/32
+-
+  name: Multiple CIDRs
+  port_range: 22
+  ip_ranges:
+  - 10.0.1.1/32
+  - 10.0.1.2/32
