@@ -20,23 +20,10 @@ module Ec2SecurityCzar
       else
         @ec2 = AWS.ec2
       end
-      create_missing_security_groups
     end
 
-    def update_rules
-      security_groups.each do |sg|
-        security_group = SecurityGroup.new(sg, @environment)
-        security_group.update_rules
-      end
-    end
-
-    def security_groups
-      SecurityGroup.from_api(ec2)
-    end
-
-    def create_missing_security_groups
-      security_groups
-      SecurityGroup.missing_security_groups.each{|msg| ec2.security_groups.create(msg)}
+    def update_security_groups
+      SecurityGroup.update_security_groups(ec2, @environment)
     end
 
     def load_config

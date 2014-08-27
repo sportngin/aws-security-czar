@@ -43,7 +43,7 @@ module Ec2SecurityCzar
 
     def group_id(group)
       if group.is_a? Hash
-        group[:group_id] || SecurityGroup.name_lookup(group[:group_name])
+        group[:group_id] || SecurityGroup.name_lookup(group[:group_name]).id
       else
         group
       end

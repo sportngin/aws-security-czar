@@ -6,7 +6,8 @@ module Ec2SecurityCzar
   describe Rule do
     let(:direction) { :outbound }
     let(:ip_range) { '0.0.0.0/0' }
-    let(:group) { { group_id: 'sec-group' } }
+    let(:group_id) { 'sec-group' }
+    let(:group) { {group_id: group_id} }
     let(:protocol) { :tcp }
     let(:port_range) { '666' }
     let(:api_object) { double }
@@ -15,6 +16,7 @@ module Ec2SecurityCzar
         direction: direction,
         ip_range: ip_range,
         protocol: protocol,
+        group: group,
         port_range: port_range,
         api_object: api_object,
       }
@@ -38,18 +40,10 @@ module Ec2SecurityCzar
 
       context "rule with group name to a group id" do
         let(:group_name) { 'sec-group-name' }
-        let(:options) {
-          {
-            direction: direction,
-            group: group,
-            protocol: protocol,
-            port_range: port_range,
-            api_object: api_object,
-          }
-        }
 
         it "returns true if the group ids are the same" do
-          allow(SecurityGroup).to receive(:name_lookup).with(group_name).and_return(group[:group_id])
+          allow(SecurityGroup).to receive(:name_lookup).with(group_name).and_return(group_id)
+          allow(group_id).to receive(:id).and_return(group_id)
           equivalent_rule = Rule.new(options.merge(group: { group_name: group_name }))
           expect(subject.equal?(equivalent_rule)).to be_truthy
         end
@@ -143,8 +137,9 @@ module Ec2SecurityCzar
       end
 
       context "given a hash with group_name" do
-        let(:group) { { group_name: "sec-group-name" } }
-        let(:group_id) { "sec-group" }
+        let(:group_name) { 'sec-group' }
+        let(:group) { {group_id: group_id, group_name: group_name} }
+
         it "returns the matching group id" do
           allow(SecurityGroup).to receive(:name_lookup).with(group[:group_name]).and_return(group_id)
           expect(subject.group_id(group)).to equal(group_id)

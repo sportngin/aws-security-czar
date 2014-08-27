@@ -25,7 +25,7 @@ arg_name '<environment>'
 command :update do |c|
   c.flag [:t, :token], :desc => "AWS MFA Auth Token, Requires mfa_serial_number to be set in the aws config"
   c.action do |global_options, options, args|
-   Ec2SecurityCzar::Base.new(args.first, global_options.merge(options)).update_rules
+   Ec2SecurityCzar::Base.new(args.first, global_options.merge(options)).update_security_groups
   end
 end
 

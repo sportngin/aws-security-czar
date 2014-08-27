@@ -50,6 +50,7 @@ module Ec2SecurityCzar
         allow(subject).to receive(:current_rules).with(:outbound).and_return([delete_outbound])
         allow(subject).to receive(:current_rules).with(:inbound).and_return([delete_inbound])
         allow(subject).to receive(:puts)
+        allow(SecurityGroup).to receive(:name_lookup) {api}
       end
 
       subject { SecurityGroup.new(api, environment) }
@@ -114,13 +115,13 @@ module Ec2SecurityCzar
         allow(security_group_2).to receive(:name).and_return("bar")
       end
 
-      it "returns nil if config_security_groups is the same as security_groups" do
-        allow(SecurityGroup).to receive(:security_groups).and_return([security_group_1, security_group_2])
+      it "returns empty if config_security_groups is the same as security_groups" do
+        allow(SecurityGroup).to receive(:from_aws).and_return([security_group_1, security_group_2])
         expect(SecurityGroup.send(:missing_security_groups)).to eq([])
       end
 
       it "returns groups in config_security_groups not in security_groups" do
-        allow(SecurityGroup).to receive(:security_groups).and_return([security_group_2])
+        allow(SecurityGroup).to receive(:from_aws).and_return([security_group_2])
         expect(SecurityGroup.send(:missing_security_groups)).to eq(["foo"])
       end
     end
@@ -128,21 +129,71 @@ module Ec2SecurityCzar
     context ".name_lookup" do
       let(:security_group_name) { 'sec-group-name' }
       let(:security_group_id) { 'sec-group' }
-      let(:security_groups) { [instance_double("AWS::EC2::SecurityGroup", name: security_group_name, id: security_group_id)] }
+      let(:security_group) { instance_double("AWS::EC2::SecurityGroup", name: security_group_name, id: security_group_id) }
+      let(:security_groups) { [security_group] }
       it "returns the group id corresponding to the group name" do
         allow(SecurityGroup).to receive(:security_groups).and_return(security_groups)
-        expect(SecurityGroup.name_lookup(security_group_name)).to equal(security_group_id)
+        expect(SecurityGroup.name_lookup(security_group_name)).to equal(security_group)
       end
     end
 
-    context ".from_api" do
+    context ".from_aws" do
       let(:ec2) { double }
       before do
-        SecurityGroup.instance_variable_set(:@security_groups, nil)
+        allow(SecurityGroup).to receive(:security_groups) {nil}
+        allow(SecurityGroup).to receive(:ec2) {ec2}
       end
       it "delegates to the ec2 object" do
         expect(ec2).to receive(:security_groups)
-        SecurityGroup.from_api(ec2)
+        SecurityGroup.from_aws
+      end
+    end
+
+    context ".create_missing_security_groups" do
+      let(:ec2) { double }
+      let(:security_groups) { double }
+      let(:environment) { 'parsed' }
+      let(:security_group_name) {'sec-group-name'}
+      let(:security_group) { double }
+
+      before do
+        allow(SecurityGroup).to receive(:ec2) {ec2}
+        allow(ec2).to receive(:security_groups) {security_groups}
+        allow(SecurityGroup).to receive(:missing_security_groups).and_return(['sec-group-name'])
+        allow(SecurityGroup).to receive(:new).with(security_group_name,environment).and_return(security_group)
+        allow(security_group).to receive(:rules_config).and_return({vpc: "vpc"})
+      end
+
+      it "create missing security groups" do
+        expect(security_groups).to receive(:create)
+        SecurityGroup.send(:create_missing_security_groups, environment)
+      end
+    end
+
+    context ".update_rules" do
+      let(:ec2) { double }
+      let(:security_group) { double }
+      let(:security_groups) { [security_group] }
+
+      before do
+        allow(SecurityGroup).to receive(:security_groups) {security_groups}
+        allow(SecurityGroup).to receive(:new).with('sec-group-name',nil).and_return(security_group)
+        allow(security_group).to receive(:name) {'sec-group-name'}
+      end
+
+      it "calls #update_rules" do
+        expect(security_group).to receive(:update_rules)
+        SecurityGroup.send(:update_rules)
+      end
+    end
+
+    context ".udpate_security_groups" do
+      let(:ec2) { double }
+      let(:environment) { 'test' }
+      it "calls everything it's supposed to" do
+        expect(SecurityGroup).to receive(:create_missing_security_groups)
+        expect(SecurityGroup).to receive(:update_rules)
+        SecurityGroup.send(:update_security_groups, ec2, environment)
       end
     end
   end
