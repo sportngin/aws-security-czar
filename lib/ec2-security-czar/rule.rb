@@ -43,7 +43,7 @@ module Ec2SecurityCzar
 
     def group_id(group)
       if group.is_a? Hash
-        group[:group_id] || SecurityGroup.name_lookup(group[:group_name]).id
+        group[:group_id] || SecurityGroup.lookup(group[:group_name]).id
       else
         group
       end
@@ -62,9 +62,9 @@ module Ec2SecurityCzar
       rules.flatten
     end
 
-    def self.rules_from_config(rules_config, direction)
+    def self.rules_from_config(config, direction)
       rules = []
-      Array(rules_config[direction]).map do |zone|
+      Array(config[direction]).map do |zone|
         rules << Array(zone[:ip_ranges]).map do |ip|
           Rule.new(ip_range: ip, port_range: zone[:port_range], protocol: zone[:protocol], direction: direction)
         end

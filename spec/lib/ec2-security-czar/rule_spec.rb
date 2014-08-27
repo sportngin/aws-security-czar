@@ -42,7 +42,7 @@ module Ec2SecurityCzar
         let(:group_name) { 'sec-group-name' }
 
         it "returns true if the group ids are the same" do
-          allow(SecurityGroup).to receive(:name_lookup).with(group_name).and_return(group_id)
+          allow(SecurityGroup).to receive(:lookup).with(group_name).and_return(group_id)
           allow(group_id).to receive(:id).and_return(group_id)
           equivalent_rule = Rule.new(options.merge(group: { group_name: group_name }))
           expect(subject.equal?(equivalent_rule)).to be_truthy
@@ -141,7 +141,7 @@ module Ec2SecurityCzar
         let(:group) { {group_id: group_id, group_name: group_name} }
 
         it "returns the matching group id" do
-          allow(SecurityGroup).to receive(:name_lookup).with(group[:group_name]).and_return(group_id)
+          allow(SecurityGroup).to receive(:lookup).with(group[:group_name]).and_return(group_id)
           expect(subject.group_id(group)).to equal(group_id)
         end
       end

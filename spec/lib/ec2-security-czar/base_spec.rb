@@ -76,28 +76,6 @@ module Ec2SecurityCzar
       end
     end
 
-    # context "#update_rules" do
-    #   let(:security_group) { double }
-    #   it "calls update_rules on each Security Group" do
-    #     allow(subject).to receive(:security_groups).and_return(1..3)
-    #     expect(security_group).to receive(:update_rules).exactly(3).times
-    #     expect(SecurityGroup).to receive(:new).exactly(3).times.with(any_args).and_return(security_group)
-    #     subject.update_rules
-    #   end
-    # end
-
-    # context "#create_missing_security_rules" do
-    #   let(:aws_security_groups) { double }
-
-    #   it "calls AWS.security_group.create" do
-    #     allow(SecurityGroup).to receive(:missing_security_groups).and_return([], ["foo_group"])
-    #     allow(ec2).to receive(:security_groups) {aws_security_groups}
-    #     expect(aws_security_groups).to receive(:create).with("foo_group")
-    #     allow_any_instance_of(Base).to receive(:security_groups)
-    #     subject.create_missing_security_groups
-    #   end
-    # end
-
     context "#update_security_groups" do
       let(:environment) { 'environment' }
       let(:environment_conf) { { environment => aws_conf } }

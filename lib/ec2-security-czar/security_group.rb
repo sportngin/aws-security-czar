@@ -9,7 +9,7 @@ module Ec2SecurityCzar
 
   class SecurityGroup
 
-    attr_accessor :name, :rules_config, :diff
+    attr_accessor :name, :config, :diff
 
     def initialize(name, environment)
       @name = name
@@ -39,7 +39,7 @@ module Ec2SecurityCzar
     # name: the name of the security group to lookup 
     #
     # Returns - SecurityGroup object 
-    def self.name_lookup(name)
+    def self.lookup(name)
       @security_group_hash ||= security_groups.inject({}) do |hash, security_group|
         hash[security_group.name] = security_group
         hash
@@ -78,7 +78,7 @@ module Ec2SecurityCzar
     def self.create_missing_security_groups(environment)
       missing_security_groups.each do |name|
         security_group = SecurityGroup.new(name, environment)
-        config = security_group.rules_config
+        config = security_group.config
         ec2.security_groups.create(name, vpc: config[:vpc], description: config[:description]) 
       end
     end
@@ -102,7 +102,7 @@ module Ec2SecurityCzar
 
 
     def update_rules
-      if rules_config
+      if config
         puts "================================================="
         puts "Applying changes for #{name}:"
         puts "================================================="
@@ -117,7 +117,7 @@ module Ec2SecurityCzar
         # back any that got removed because of the way AWS groups rules together.
         rules_diff
         [:outbound, :inbound].each do |direction|
-          diff[:additions][direction].each{ |rule| rule.authorize!(self.class.name_lookup(name)) }
+          diff[:additions][direction].each{ |rule| rule.authorize!(self.class.lookup(name)) }
         end
         puts "\n"
       else
@@ -145,7 +145,7 @@ module Ec2SecurityCzar
     def load_rules
       if File.exists? config_filename
         environment = @environment
-        @rules_config = SecurityGroupConfig[YAML.load(ERB.new(File.read(config_filename)).result(binding))]
+        @config = SecurityGroupConfig[YAML.load(ERB.new(File.read(config_filename)).result(binding))]
       end
     end
 
@@ -160,14 +160,14 @@ module Ec2SecurityCzar
     private :config_filename
 
     def current_rules(direction)
-      security_group = self.class.name_lookup(name)
+      security_group = self.class.lookup(name)
       aws_security_group_rules = direction == :outbound ? security_group.egress_ip_permissions : security_group.ingress_ip_permissions
       Rule.rules_from_api(aws_security_group_rules, direction)
     end
     private :current_rules
 
     def new_rules(direction)
-      Rule.rules_from_config(rules_config, direction)
+      Rule.rules_from_config(config, direction)
     end
     private :new_rules
 

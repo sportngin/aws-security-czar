@@ -23,7 +23,7 @@ module Ec2SecurityCzar
       }
     }
 
-    let(:rules_config) { { outbound: [outbound_rule], inbound: [inbound_rule] } }
+    let(:config) { { outbound: [outbound_rule], inbound: [inbound_rule] } }
     let(:filename) { 'the/config/file' }
     let(:file) { "Raw File" }
     let(:parsed_file) { { derp: :herp } }
@@ -50,7 +50,7 @@ module Ec2SecurityCzar
         allow(subject).to receive(:current_rules).with(:outbound).and_return([delete_outbound])
         allow(subject).to receive(:current_rules).with(:inbound).and_return([delete_inbound])
         allow(subject).to receive(:puts)
-        allow(SecurityGroup).to receive(:name_lookup) {api}
+        allow(SecurityGroup).to receive(:lookup) {api}
       end
 
       subject { SecurityGroup.new(api, environment) }
@@ -126,14 +126,14 @@ module Ec2SecurityCzar
       end
     end
 
-    context ".name_lookup" do
+    context ".lookup" do
       let(:security_group_name) { 'sec-group-name' }
       let(:security_group_id) { 'sec-group' }
       let(:security_group) { instance_double("AWS::EC2::SecurityGroup", name: security_group_name, id: security_group_id) }
       let(:security_groups) { [security_group] }
       it "returns the group id corresponding to the group name" do
         allow(SecurityGroup).to receive(:security_groups).and_return(security_groups)
-        expect(SecurityGroup.name_lookup(security_group_name)).to equal(security_group)
+        expect(SecurityGroup.lookup(security_group_name)).to equal(security_group)
       end
     end
 
@@ -155,17 +155,18 @@ module Ec2SecurityCzar
       let(:environment) { 'parsed' }
       let(:security_group_name) {'sec-group-name'}
       let(:security_group) { double }
+      let(:configs) {{vpc: "vpc", description: "description"}}
 
       before do
         allow(SecurityGroup).to receive(:ec2) {ec2}
         allow(ec2).to receive(:security_groups) {security_groups}
         allow(SecurityGroup).to receive(:missing_security_groups).and_return(['sec-group-name'])
         allow(SecurityGroup).to receive(:new).with(security_group_name,environment).and_return(security_group)
-        allow(security_group).to receive(:rules_config).and_return({vpc: "vpc"})
+        allow(security_group).to receive(:config).and_return(configs)
       end
 
       it "create missing security groups" do
-        expect(security_groups).to receive(:create)
+        expect(security_groups).to receive(:create).with('sec-group-name', {vpc: "vpc", description: "description"})
         SecurityGroup.send(:create_missing_security_groups, environment)
       end
     end
