@@ -49,7 +49,7 @@ module Ec2SecurityCzar
         allow(subject).to receive(:new_rules).with(:inbound).and_return([addition_inbound])
         allow(subject).to receive(:current_rules).with(:outbound).and_return([delete_outbound])
         allow(subject).to receive(:current_rules).with(:inbound).and_return([delete_inbound])
-        allow(subject).to receive(:puts)
+        allow(subject).to receive(:say)
         allow(SecurityGroup).to receive(:lookup) {api}
       end
 
@@ -127,13 +127,23 @@ module Ec2SecurityCzar
     end
 
     context ".lookup" do
+      before do
+        allow(security_group).to receive(:name) {security_group_name}
+        allow(security_group).to receive(:id) {security_group_id}
+        allow(SecurityGroup).to receive(:security_groups).and_return([security_group])
+        SecurityGroup.instance_variable_set(:@security_group_hash, nil)
+      end
+
       let(:security_group_name) { 'sec-group-name' }
       let(:security_group_id) { 'sec-group' }
-      let(:security_group) { instance_double("AWS::EC2::SecurityGroup", name: security_group_name, id: security_group_id) }
-      let(:security_groups) { [security_group] }
-      it "returns the group id corresponding to the group name" do
-        allow(SecurityGroup).to receive(:security_groups).and_return(security_groups)
-        expect(SecurityGroup.lookup(security_group_name)).to equal(security_group)
+      let(:security_group) { double }
+
+      it "returns the group corresponding to the group name" do
+        expect(SecurityGroup.lookup(security_group_name)).to eq(security_group)
+      end
+
+      it "returns the group name corresponding to the group id" do
+        expect(SecurityGroup.lookup(security_group_id)).to eq(security_group)
       end
     end
 
@@ -163,6 +173,7 @@ module Ec2SecurityCzar
         allow(SecurityGroup).to receive(:missing_security_groups).and_return(['sec-group-name'])
         allow(SecurityGroup).to receive(:new).with(security_group_name,environment).and_return(security_group)
         allow(security_group).to receive(:config).and_return(configs)
+        allow(SecurityGroup).to receive(:say)
       end
 
       it "create missing security groups" do
@@ -188,7 +199,7 @@ module Ec2SecurityCzar
       end
     end
 
-    context ".udpate_security_groups" do
+    context ".update_security_groups" do
       let(:ec2) { double }
       let(:environment) { 'test' }
       it "calls everything it's supposed to" do

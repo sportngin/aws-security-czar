@@ -1,3 +1,5 @@
+require 'highline/import'
+
 module Ec2SecurityCzar
   class Rule
 
@@ -27,18 +29,18 @@ module Ec2SecurityCzar
       else
         security_group_api.authorize_ingress(protocol, port_range, sources)
       end
-      puts "Authorized: #{inspect}"
+      say "<%= color('Authorized - #{pretty_print}', :green) %>"
     rescue StandardError => e
-      puts "#{e.class} - #{e.message}"
-      puts inspect
+      say "<%= color('#{e.class} - #{e.message}', :red) %>"
+      say "<%= color('#{pretty_print}', :red) %>"
     end
 
     def revoke!
       @api_object.revoke
-      puts "Revoked: #{inspect}"
+      say "<%= color('Revoked - #{pretty_print}', :cyan) %>"
     rescue StandardError => e
-      puts "#{e.class} - #{e.message}"
-      puts inspect
+      say "<%= color('#{e.class} - #{e.message}', :red) %>"
+      say "<%= color('#{pretty_print}', :red) %>"
     end
 
     def group_id(group)
@@ -75,5 +77,11 @@ module Ec2SecurityCzar
       rules.flatten
     end
 
+    def pretty_print
+      direction = egress ? "Outbound" : "Inbound"
+      ip_or_group = ip ? ip : SecurityGroup.lookup(group).name
+      port = port_range.is_a?(Range) ? "ports #{port_range}" : "port #{port_range}"
+      "#{direction} traffic on #{port} for #{ip_or_group} using #{protocol}"
+    end
   end
 end

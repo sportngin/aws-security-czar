@@ -1,6 +1,7 @@
 require 'yaml'
 require 'erb'
 require 'hashie'
+require 'highline/import'
 
 module Ec2SecurityCzar
   class SecurityGroupConfig < Hash
@@ -34,17 +35,18 @@ module Ec2SecurityCzar
       end
     end
 
-    # Public: Creates a hash mapping security_group.name to security_group, or looks up security_group by name
+    # Public: Creates a hash mapping security_group.name to security_group, and looks up security_group by name or id
     # 
     # name: the name of the security group to lookup 
     #
     # Returns - SecurityGroup object 
-    def self.lookup(name)
+    def self.lookup(query)
       @security_group_hash ||= security_groups.inject({}) do |hash, security_group|
         hash[security_group.name] = security_group
+        hash[security_group.id] = security_group
         hash
       end
-      @security_group_hash[name]
+      @security_group_hash[query] 
     end
 
     # Private: Gets all security groups from AWS
@@ -76,10 +78,17 @@ module Ec2SecurityCzar
     #
     # Returns - nil
     def self.create_missing_security_groups(environment)
-      missing_security_groups.each do |name|
-        security_group = SecurityGroup.new(name, environment)
-        config = security_group.config
-        ec2.security_groups.create(name, vpc: config[:vpc], description: config[:description]) 
+      unless (missing_groups = missing_security_groups).empty?
+        say "================================================="
+        say "Creating security groups for #{environment}:"
+        say "================================================="
+        missing_groups.each do |name|
+          security_group = SecurityGroup.new(name, environment)
+          config = security_group.config
+          say "<%= color('#{name}', :green) %>"
+          ec2.security_groups.create(name, vpc: config[:vpc], description: config[:description]) 
+        end
+        say "\n"
       end
     end
     private_class_method :create_missing_security_groups
@@ -103,9 +112,9 @@ module Ec2SecurityCzar
 
     def update_rules
       if config
-        puts "================================================="
-        puts "Applying changes for #{name}:"
-        puts "================================================="
+        say "================================================="
+        say "Applying changes for #{name}:"
+        say "================================================="
 
         # Apply deletions first
         rules_diff
@@ -119,9 +128,9 @@ module Ec2SecurityCzar
         [:outbound, :inbound].each do |direction|
           diff[:additions][direction].each{ |rule| rule.authorize!(self.class.lookup(name)) }
         end
-        puts "\n"
+        say "\n"
       else
-        puts "No config file for #{name}, skipping...\n\n"
+        say "No config file for #{name}, skipping...\n\n"
       end
     end
 
