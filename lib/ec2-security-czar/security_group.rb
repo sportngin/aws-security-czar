@@ -85,8 +85,8 @@ module Ec2SecurityCzar
         missing_groups.each do |name|
           security_group = SecurityGroup.new(name, environment)
           config = security_group.config
-          say "<%= color('#{name}', :green) %>"
           ec2.security_groups.create(name, vpc: config[:vpc], description: config[:description]) 
+          say "<%= color('#{name}', :green) %>"
         end
         say "\n"
       end
