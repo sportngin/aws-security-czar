@@ -23,7 +23,8 @@ module Ec2SecurityCzar
     }
 
     before do
-      allow(subject).to receive(:puts)
+      allow(subject).to receive(:say)
+      allow(subject).to receive(:pretty_print)
     end
 
     subject { Rule.new(options) }
@@ -103,7 +104,7 @@ module Ec2SecurityCzar
 
       it "rescues an api error" do
         allow(security_group_api).to receive(:authorize_egress).and_raise(StandardError)
-        expect(subject).to receive(:puts).twice
+        expect(subject).to receive(:say).twice
         expect { subject.authorize!(security_group_api) }.to_not raise_error
       end
     end
@@ -116,7 +117,7 @@ module Ec2SecurityCzar
 
       it "rescues an api error" do
         allow(api_object).to receive(:revoke).and_raise(StandardError)
-        expect(subject).to receive(:puts).twice
+        expect(subject).to receive(:say).twice
         expect { subject.revoke! }.to_not raise_error
       end
     end
