@@ -64,12 +64,19 @@ module Ec2SecurityCzar
     # Returns - Array of all security group names
     def self.config_security_groups
       Dir["config/*.yml"].reject!{|file| file == "config/aws_keys.yml"}.map do |file|
-        sg_region = SecurityGroupConfig[YAML.load(ERB.new(File.read(file)).result(binding))][:region] || 'us-east-1'
-        next unless sg_region == region
+        next unless get_security_group_region(file) == region
         File.basename(file,File.extname(file))
       end.compact
     end
     private_class_method :config_security_groups
+
+    # Private: Gets the security group region
+    #
+    # Returns - The region in which the security group should be made
+    def self.get_security_group_region(file)
+      SecurityGroupConfig[YAML.load(ERB.new(File.read(file)).result(binding))][:region] || 'us-east-1'
+    end
+    private_class_method :get_security_group_region
 
     # Public: Finds security groups with YAML files not on AWS
     #

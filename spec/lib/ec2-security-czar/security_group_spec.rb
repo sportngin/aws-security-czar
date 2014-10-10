@@ -3,7 +3,6 @@ require 'ec2-security-czar/security_group'
 
 module Ec2SecurityCzar
   describe SecurityGroup do
-    let(:api) { double("API", name: 'test') }
     let(:outbound_rule) {
       {
         zone: "Test Outbound",
@@ -22,15 +21,20 @@ module Ec2SecurityCzar
         port_range: '999'
       }
     }
-
+    let(:api) { double("API", name: 'test') }
     let(:config) { { outbound: [outbound_rule], inbound: [inbound_rule] } }
     let(:filename) { 'the/config/file' }
     let(:file) { "Raw File" }
     let(:parsed_file) { { derp: :herp } }
     let(:environment) { 'environment' }
+    let(:region) { 'us-east-1'}
+    let(:ec2) { double }
 
 
     before do
+      allow(SecurityGroup).to receive(:ec2) {ec2}
+      allow(SecurityGroup).to receive(:region) {region}
+      allow(SecurityGroup).to receive(:environment) {environment}
       allow(File).to receive(:read).and_return(file)
       allow_any_instance_of(SecurityGroup).to receive(:config_filename).and_return(filename)
       allow(File).to receive(:exists?).with(filename).and_return(true)
@@ -86,6 +90,7 @@ module Ec2SecurityCzar
         expect(SecurityGroupConfig).to receive(:[]).at_least(:once).with(hash_including('environment' => 'parsed'))
         subject.send(:load_rules)
       end
+
     end
 
     context "#config_security_groups" do
@@ -93,12 +98,30 @@ module Ec2SecurityCzar
       let(:erb_file) { "--- \nenvironment: <%= environment %> \n" }
 
       before do
+        allow(SecurityGroup).to receive(:get_security_group_region).and_return(region)
         allow(File).to receive(:read).with(filename).and_return(erb_file)
       end
 
       it "returns an array of file names with out the extension" do
         allow(Dir).to receive(:[]).and_return(["config/aws_keys.yml", "config/foo.yml", "config/bar.yml"])
         expect(SecurityGroup.send(:config_security_groups)).to eq(["foo","bar"])
+      end
+
+      context "with a region specified" do
+        let(:file_region_1) {'us-east-1'}
+        let(:file_region_2) {'us-west-2'}
+        let(:erb_file_1) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_1 %>\n" }
+        let(:erb_file_2) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_2 %>\n" }
+
+        before do
+          allow(SecurityGroup).to receive(:get_security_group_region).and_return(file_region_1,file_region_2)
+          allow(File).to receive(:read).with(filename).and_return([erb_file_1, erb_file_2])
+        end
+
+        it "returns an an empty array" do
+          allow(Dir).to receive(:[]).and_return(["config/aws_keys.yml", "config/foo.yml", "config/bar.yml"])
+          expect(SecurityGroup.send(:config_security_groups)).to eq(["foo"])
+        end
       end
     end
 
@@ -148,10 +171,8 @@ module Ec2SecurityCzar
     end
 
     context ".from_aws" do
-      let(:ec2) { double }
       before do
         allow(SecurityGroup).to receive(:security_groups) {nil}
-        allow(SecurityGroup).to receive(:ec2) {ec2}
       end
       it "delegates to the ec2 object" do
         expect(ec2).to receive(:security_groups)
@@ -160,7 +181,6 @@ module Ec2SecurityCzar
     end
 
     context ".create_missing_security_groups" do
-      let(:ec2) { double }
       let(:security_groups) { double }
       let(:environment) { 'parsed' }
       let(:security_group_name) {'sec-group-name'}
@@ -168,7 +188,6 @@ module Ec2SecurityCzar
       let(:configs) {{vpc: "vpc", description: "description"}}
 
       before do
-        allow(SecurityGroup).to receive(:ec2) {ec2}
         allow(ec2).to receive(:security_groups) {security_groups}
         allow(SecurityGroup).to receive(:missing_security_groups).and_return(['sec-group-name'])
         allow(SecurityGroup).to receive(:new).with(security_group_name,environment).and_return(security_group)
@@ -183,13 +202,13 @@ module Ec2SecurityCzar
     end
 
     context ".update_rules" do
-      let(:ec2) { double }
       let(:security_group) { double }
       let(:security_groups) { [security_group] }
 
       before do
+        SecurityGroup.instance_variable_set(:@environment, "environment")
         allow(SecurityGroup).to receive(:security_groups) {security_groups}
-        allow(SecurityGroup).to receive(:new).with('sec-group-name',nil).and_return(security_group)
+        allow(SecurityGroup).to receive(:new).with('sec-group-name','environment').and_return(security_group)
         allow(security_group).to receive(:name) {'sec-group-name'}
       end
 
@@ -200,12 +219,10 @@ module Ec2SecurityCzar
     end
 
     context ".update_security_groups" do
-      let(:ec2) { double }
-      let(:environment) { 'test' }
       it "calls everything it's supposed to" do
         expect(SecurityGroup).to receive(:create_missing_security_groups)
         expect(SecurityGroup).to receive(:update_rules)
-        SecurityGroup.send(:update_security_groups, ec2, environment)
+        SecurityGroup.send(:update_security_groups, ec2, environment, region)
       end
     end
   end
