@@ -23,7 +23,7 @@ module Ec2SecurityCzar
     end
 
     def update_security_groups
-      SecurityGroup.update_security_groups(ec2, @environment)
+      SecurityGroup.update_security_groups(ec2, @environment, @config[:region])
     end
 
     def load_config
