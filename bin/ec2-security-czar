@@ -24,6 +24,7 @@ desc "Update your ec2 security groups"
 arg_name '<environment>'
 command :update do |c|
   c.flag [:t, :token], :desc => "AWS MFA Auth Token, Requires mfa_serial_number to be set in the aws config"
+  c.flag [:r, :region], :desc => "AWS Region to apply updates in, ex. 'us-west-2', defaults to 'us-east-1'"
   c.action do |global_options, options, args|
    Ec2SecurityCzar::Base.new(args.first, global_options.merge(options)).update_security_groups
   end
