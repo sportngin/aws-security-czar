@@ -63,12 +63,16 @@ module Ec2SecurityCzar
     #
     # Returns - Array of all security group names
     def self.config_security_groups
-      Dir["config/*.yml"].reject!{|file| file == "config/aws_keys.yml"}.map do |file|
-        next unless get_security_group_region(file) == region
-        File.basename(file,File.extname(file))
-      end.compact
+      security_group_definition_files
+        .reject! { |file| get_security_group_region(file) != region}
+        .map { |file| File.basename(file,File.extname(file)) }
     end
     private_class_method :config_security_groups
+
+    def self.security_group_definition_files
+      Dir["config/*.yml"].reject!{ |file| file == "config/aws_keys.yml" }
+    end
+    private_class_method :security_group_definition_files
 
     # Private: Gets the security group region
     #
