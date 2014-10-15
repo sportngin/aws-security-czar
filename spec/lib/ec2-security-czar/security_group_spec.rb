@@ -93,34 +93,45 @@ module Ec2SecurityCzar
 
     end
 
-    context "#config_security_groups" do
+    context "#security_group_definition_files" do
       let(:environment) { 'parsed' }
       let(:erb_file) { "--- \nenvironment: <%= environment %> \n" }
 
       before do
-        allow(SecurityGroup).to receive(:get_security_group_region).and_return(region)
         allow(File).to receive(:read).with(filename).and_return(erb_file)
       end
 
       it "returns an array of file names with out the extension" do
         allow(Dir).to receive(:[]).and_return(["config/aws_keys.yml", "config/foo.yml", "config/bar.yml"])
-        expect(SecurityGroup.send(:config_security_groups)).to eq(["foo","bar"])
+        expect(SecurityGroup.send(:security_group_definition_files)).to eq(["config/foo.yml","config/bar.yml"])
+      end
+    end
+
+    context "#config_security_groups" do
+
+      let(:file_region_1) {'us-east-1'}
+      let(:file_region_2) {'us-west-2'}
+      let(:erb_file_1) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_1 %>\n" }
+      let(:erb_file_2) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_2 %>\n" }
+
+      before do
+        allow(SecurityGroup).to receive(:get_security_group_region).and_return(file_region_1,file_region_2)
+        allow(File).to receive(:read).with(filename).and_return([erb_file_1, erb_file_2])
+      end
+
+      context "with no region specified" do
+        it "retrusn groups in the default region" do
+          allow(Dir).to receive(:[]).and_return(["config/aws_keys.yml", "config/foo.yml", "config/bar.yml"])
+          expect(SecurityGroup.send(:config_security_groups)).to eq(["foo"])
+        end
       end
 
       context "with a region specified" do
-        let(:file_region_1) {'us-east-1'}
-        let(:file_region_2) {'us-west-2'}
-        let(:erb_file_1) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_1 %>\n" }
-        let(:erb_file_2) { "--- \nenvironment: <%= environment %> \n region: <%= file_region_2 %>\n" }
+        let(:region) { 'us-west-2' }
 
-        before do
-          allow(SecurityGroup).to receive(:get_security_group_region).and_return(file_region_1,file_region_2)
-          allow(File).to receive(:read).with(filename).and_return([erb_file_1, erb_file_2])
-        end
-
-        it "returns an an empty array" do
+        it "returns groups in the specified region" do
           allow(Dir).to receive(:[]).and_return(["config/aws_keys.yml", "config/foo.yml", "config/bar.yml"])
-          expect(SecurityGroup.send(:config_security_groups)).to eq(["foo"])
+          expect(SecurityGroup.send(:config_security_groups)).to eq(["bar"])
         end
       end
     end
