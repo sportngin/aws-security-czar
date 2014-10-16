@@ -64,7 +64,7 @@ module Ec2SecurityCzar
     # Returns - Array of all security group names
     def self.config_security_groups
       security_group_definition_files
-        .reject! { |file| get_security_group_region(file) != region}
+        .reject { |file| get_security_group_region(file) != region}
         .map { |file| File.basename(file,File.extname(file)) }
     end
     private_class_method :config_security_groups
