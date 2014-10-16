@@ -22,8 +22,11 @@ module Ec2SecurityCzar
     # 
     # ec2: ec2 instance created in base.rb
     # environment: environment passed in from commandline
-    def self.update_security_groups(ec2, environment)
+    # region: the region loaded in from aws_keys.yml, defaults to 'us-east-1'
+    def self.update_security_groups(ec2, environment, region)
       @ec2 = ec2
+      @environment = environment
+      @region = region
       create_missing_security_groups(environment)
       update_rules
     end
@@ -60,11 +63,24 @@ module Ec2SecurityCzar
     #
     # Returns - Array of all security group names
     def self.config_security_groups
-      Dir["config/*.yml"].reject!{|file| file == "config/aws_keys.yml"}.map do |file|
-        File.basename(file,File.extname(file))
-      end
+      security_group_definition_files
+        .reject! { |file| get_security_group_region(file) != region}
+        .map { |file| File.basename(file,File.extname(file)) }
     end
     private_class_method :config_security_groups
+
+    def self.security_group_definition_files
+      Dir["config/*.yml"].reject!{ |file| file == "config/aws_keys.yml" }
+    end
+    private_class_method :security_group_definition_files
+
+    # Private: Gets the security group region
+    #
+    # Returns - The region in which the security group should be made
+    def self.get_security_group_region(file)
+      SecurityGroupConfig[YAML.load(ERB.new(File.read(file)).result(binding))][:region] || 'us-east-1'
+    end
+    private_class_method :get_security_group_region
 
     # Public: Finds security groups with YAML files not on AWS
     #
@@ -109,6 +125,15 @@ module Ec2SecurityCzar
     end
     private_class_method :ec2
 
+    def self.environment
+      @environment
+    end
+    private_class_method :environment
+
+    def self.region
+      @region
+    end
+    private_class_method :region
 
     def update_rules
       if config

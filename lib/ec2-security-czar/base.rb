@@ -13,7 +13,7 @@ module Ec2SecurityCzar
     def initialize(environment=nil, args={})
       raise MissingConfig.new("Missing aws_keys.yml config file") unless File.exists?(config_filename)
       @environment = environment
-      load_config
+      load_config(args[:region])
       AWS.config(access_key_id: @config[:access_key], secret_access_key: @config[:secret_key], region: @config[:region])
       if @config[:mfa_serial_number]
         @ec2 = mfa_auth(args[:token])
@@ -23,14 +23,14 @@ module Ec2SecurityCzar
     end
 
     def update_security_groups
-      SecurityGroup.update_security_groups(ec2, @environment)
+      SecurityGroup.update_security_groups(ec2, @environment, @config[:region])
     end
 
-    def load_config
+    def load_config(region)
       return @config if @config
       @config = AwsConfig[YAML.load_file(config_filename)]
       @config = @config[@environment] if @environment
-      @config[:region] ||= 'us-east-1'
+      @config[:region] = region || 'us-east-1'
       @config
     end
 

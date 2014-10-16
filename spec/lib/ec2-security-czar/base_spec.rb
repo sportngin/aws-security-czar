@@ -86,7 +86,7 @@ module Ec2SecurityCzar
       end
 
       it "delegates to the SecurityGroup class" do
-        expect(SecurityGroup).to receive(:update_security_groups).with(ec2, environment)
+        expect(SecurityGroup).to receive(:update_security_groups).with(ec2, environment, region)
         subject.update_security_groups
       end
     end
