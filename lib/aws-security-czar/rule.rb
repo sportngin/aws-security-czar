@@ -1,6 +1,6 @@
 require 'highline/import'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   class Rule
 
     attr_accessor :protocol, :port_range, :ip, :group, :egress

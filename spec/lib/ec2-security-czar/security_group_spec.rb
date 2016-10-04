@@ -1,7 +1,7 @@
 require 'spec_helper.rb'
-require 'ec2-security-czar/security_group'
+require 'aws-security-czar/security_group'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   describe SecurityGroup do
     let(:outbound_rule) {
       {

@@ -3,7 +3,7 @@ require 'erb'
 require 'hashie'
 require 'highline/import'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   class SecurityGroupConfig < Hash
     include Hashie::Extensions::IndifferentAccess
   end

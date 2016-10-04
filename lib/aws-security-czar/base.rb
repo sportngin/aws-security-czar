@@ -2,7 +2,7 @@ require 'aws-sdk'
 require 'yaml'
 require 'hashie'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   class AwsConfig < Hash
     include Hashie::Extensions::IndifferentAccess
   end

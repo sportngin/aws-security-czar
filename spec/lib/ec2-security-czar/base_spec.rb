@@ -1,7 +1,7 @@
 require 'spec_helper.rb'
-require 'ec2-security-czar/base'
+require 'aws-security-czar/base'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   describe Base do
     let(:access_key){ 'aws-key' }
     let(:secret_access_key){ 'aws-secret-key' }

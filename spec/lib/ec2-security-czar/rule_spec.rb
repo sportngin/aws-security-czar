@@ -1,8 +1,8 @@
 require 'spec_helper.rb'
-require 'ec2-security-czar/rule'
-require 'ec2-security-czar/security_group'
+require 'aws-security-czar/rule'
+require 'aws-security-czar/security_group'
 
-module Ec2SecurityCzar
+module AwsSecurityCzar
   describe Rule do
     let(:direction) { :outbound }
     let(:ip_range) { '0.0.0.0/0' }
