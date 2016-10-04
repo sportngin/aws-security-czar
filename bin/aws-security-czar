@@ -14,6 +14,8 @@ switch :verbose, :desc => 'Enable Verbose mode for more logging', :negatable => 
 switch :debug, :desc => 'Enable Debug mode for detailed logs and backtraces', :negatable => false
 
 pre do |global_options, command, options, args|
+  AwsSecurityCzar::GlobalConfig.merge! global_options
+  AwsSecurityCzar::GlobalConfig.merge! options
   $verbose = global_options[:verbose]
   $debug = global_options[:debug]
   ENV['GLI_DEBUG'] = $debug.to_s
