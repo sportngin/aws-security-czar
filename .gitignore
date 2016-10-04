@@ -22,3 +22,5 @@ tmp
 mkmf.log
 
 config/*
+.idea
+.DS_Store

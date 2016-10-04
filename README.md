@@ -1,4 +1,4 @@
-# Ec2SecurityCzar
+# AwsSecurityCzar
 
 Manages changes to AWS EC2 Security Groups via YAML files.
 
@@ -6,7 +6,7 @@ Manages changes to AWS EC2 Security Groups via YAML files.
 
 Add this line to your application's Gemfile:
 
-    gem 'ec2-security-czar'
+    gem 'aws-security-czar'
 
 And then execute:
 
@@ -14,7 +14,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install ec2-security-czar
+    $ gem install aws-security-czar
 
 ## Setup
 #### Install gems:
@@ -66,12 +66,12 @@ outbound: # Inbound and outbound rules are separate
 #### Update the rules on AWS:
 
 ```
-ec2-security-czar update [env_name]
+aws-security-czar update [env_name]
 ```
 
 ## Contributing
 
-1. Fork it ( https://github.com/[my-github-username]/ec2-security-czar/fork )
+1. Fork it ( https://github.com/[my-github-username]/aws-security-czar/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

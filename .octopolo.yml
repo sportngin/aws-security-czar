@@ -1,4 +1,4 @@
-github_repo: sportngin/ec2-security-czar
+github_repo: sportngin/aws-security-czar
 semantic_versioning: true
 branches_to_keep:
 - master

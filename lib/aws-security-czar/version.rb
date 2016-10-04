@@ -1,3 +1,3 @@
-module Ec2SecurityCzar
+module AwsSecurityCzar
   VERSION = "1.0.0"
 end
