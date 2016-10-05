@@ -12,6 +12,9 @@ wrap_help_text :verbatim
 
 switch :verbose, :desc => 'Enable Verbose mode for more logging', :negatable => false
 switch :debug, :desc => 'Enable Debug mode for detailed logs and backtraces', :negatable => false
+switch :mfa, :desc => 'Use MFA (you will be prompted for MFA token'
+
+flag [:r, :region], :desc => 'AWS Region updates will be applied to', :default => 'us-east-1'
 
 pre do |global_options, command, options, args|
   AwsSecurityCzar::GlobalConfig.merge! global_options
@@ -26,7 +29,6 @@ desc "Update your ec2 security groups"
 arg_name '<environment>'
 command :update do |c|
   c.flag [:t, :token], :desc => "AWS MFA Auth Token, Requires mfa_serial_number to be set in the aws config"
-  c.flag [:r, :region], :desc => "AWS Region to apply updates in, ex. 'us-west-2', defaults to 'us-east-1'"
   c.action do |global_options, options, args|
    AwsSecurityCzar::Base.new(args.first, global_options.merge(options)).update_security_groups
   end

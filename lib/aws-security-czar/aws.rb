@@ -19,6 +19,7 @@ module AwsSecurityCzar
     def authenticated(client, options)
       Aws.config.update(region: GlobalConfig.region, profile: GlobalConfig.profile)
       Aws.config.update(Aws.config.merge(credentials: session_credentials)) if GlobalConfig.mfa
+
       client.new(options)
     end
 
