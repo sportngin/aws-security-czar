@@ -7,6 +7,7 @@ module AwsSecurityCzar
     let(:reset_aws_config) { Aws.config.keys.each{ |k| Aws.config.delete k } }
     let(:reset_ec2_clients) { AwsClients.clients.delete "Aws::EC2::Client" }
     let(:mfa_devices) { [Aws::IAM::Types::MFADevice.new(user_name: 'test.user', serial_number: 'arn:aws:iam::123456789012:mfa/test.user', enable_date: Time.now())] }
+    let(:supported_services) {Aws.constants.select{ |c| Aws.const_get(c).public_methods.include?(:constants) && Aws.const_get(c).constants.include?(:Client) }}
 
     before do
       GlobalConfig.region = 'us-east-1'
@@ -14,6 +15,14 @@ module AwsSecurityCzar
       allow(Aws::EC2::Client).to receive(:new).and_return(Aws::EC2::Client.new(stub_responses: true))
       allow(Aws::IAM::Client).to receive(:new).and_return(Aws::IAM::Client.new(stub_responses: true))
       allow(Aws::STS::Client).to receive(:new).and_return(Aws::STS::Client.new(stub_responses: true))
+    end
+
+    context "client methods" do
+      it "should be created for all supported AWS services" do
+        supported_services.each do |service|
+          expect(AwsClients).to respond_to service.downcase
+        end
+      end
     end
 
     context ".ec2" do

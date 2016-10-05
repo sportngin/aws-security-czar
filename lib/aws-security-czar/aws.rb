@@ -5,12 +5,12 @@ module AwsSecurityCzar
   module AwsClients
     extend self
 
-    def ec2(options = {})
-      get_client Aws::EC2::Client, options
-    end
-
-    def iam(options = {})
-      get_client Aws::IAM::Client, options
+    def build_client_methods
+      services_with_clients.each do |service|
+        define_singleton_method service.downcase do |options = {}|
+          get_client Aws.const_get(service).const_get(:Client), options
+        end
+      end
     end
 
     def clients
@@ -82,6 +82,12 @@ module AwsSecurityCzar
       Aws::IAM::Client.new.list_account_aliases.account_aliases.first || "no alias"
     end
 
+    def services_with_clients
+      Aws.constants.select{ |c| Aws.const_get(c).public_methods.include?(:constants) && Aws.const_get(c).constants.include?(:Client) }
+    end
+
     MfaNotConfigured = Class.new(StandardError)
   end
+
+  AwsClients.build_client_methods
 end
