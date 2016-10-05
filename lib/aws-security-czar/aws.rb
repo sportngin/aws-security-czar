@@ -6,20 +6,35 @@ module AwsSecurityCzar
     extend self
 
     def ec2(options = {})
-      @ec2 ||= authenticated Aws::EC2::Client, options
+      get_client Aws::EC2::Client, options
     end
 
     def iam(options = {})
-      @iam ||= authenticated Aws::IAM::Client, options
+      get_client Aws::IAM::Client, options
+    end
+
+    def clients
+      @clients ||= {}
     end
 
     ### This module should only expose the actual clients. All supporting logic should be private.
     private
 
+    def get_client(client, options)
+      clients[client.to_s].each{ |c| return c[:client] if c[:options] == options } if clients[client.to_s]
+      new_client(client, options)
+    end
+
+    def new_client(client, options)
+      new_client = authenticated(client, options)
+      clients[client.to_s] ||= []
+      clients[client.to_s] << {options: options, client: new_client }
+      new_client
+    end
+
     def authenticated(client, options)
       Aws.config.update(region: GlobalConfig.region, profile: GlobalConfig.profile)
       Aws.config.update(Aws.config.merge(credentials: session_credentials)) if GlobalConfig.mfa
-
       client.new(options)
     end
 
@@ -58,15 +73,15 @@ module AwsSecurityCzar
     def mfa_serial_number
       # Need to override the IAM client for this operation since we don't have an MFA session yet
       iam = Aws::IAM::Client.new
-      iam.list_mfa_devices(user_name: iam.get_user.user.user_name)
-          .mfa_devices
-          .first
-          .serial_number
+      mfa_devices = iam.list_mfa_devices(user_name: iam.get_user.user.user_name).mfa_devices
+      raise MfaNotConfigured, "MFA is not configured on your account! (Profile: #{GlobalConfig.profile}, IAM Org: #{account_alias})" unless mfa_devices.count > 0
+      mfa_devices.first.serial_number
     end
 
     def account_alias
-      @account_alias ||= Aws::IAM::Client.new.list_account_aliases.account_aliases.first
+      Aws::IAM::Client.new.list_account_aliases.account_aliases.first || "no alias"
     end
 
+    MfaNotConfigured = Class.new(StandardError)
   end
 end
