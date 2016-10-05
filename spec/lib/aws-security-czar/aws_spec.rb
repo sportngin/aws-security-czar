@@ -1,6 +1,5 @@
 require 'spec_helper.rb'
 require 'aws_security_czar'
-require 'pp'
 
 module AwsSecurityCzar
   describe AwsClients do
@@ -18,6 +17,10 @@ module AwsSecurityCzar
     end
 
     context ".ec2" do
+      before do
+        reset_aws_config
+        reset_ec2_clients
+      end
       it "should use the region defined in GlobalConfig" do
         expect(AwsClients.ec2).to be_a(Aws::EC2::Client)
         expect(Aws.config[:region]).to eql(GlobalConfig.region)

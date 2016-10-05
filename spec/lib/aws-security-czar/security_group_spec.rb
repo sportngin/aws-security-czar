@@ -1,5 +1,5 @@
 require 'spec_helper.rb'
-require 'aws-security-czar/security_group'
+require 'aws_security_czar'
 
 module AwsSecurityCzar
   describe SecurityGroup do
@@ -28,10 +28,11 @@ module AwsSecurityCzar
     let(:parsed_file) { { derp: :herp } }
     let(:environment) { 'environment' }
     let(:region) { 'us-east-1'}
-    let(:ec2) { double }
+    let(:ec2) { AwsClients.ec2 }
 
 
     before do
+      allow(GlobalConfig).to receive(:region).and_return('us-east-1')
       allow(SecurityGroup).to receive(:ec2) {ec2}
       allow(SecurityGroup).to receive(:region) {region}
       allow(SecurityGroup).to receive(:environment) {environment}
