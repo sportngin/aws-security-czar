@@ -33,7 +33,7 @@ module AwsSecurityCzar
 
     def self.update_rules
       security_groups.each do |sg|
-        security_group = SecurityGroup.new(sg.name, @environment)
+        security_group = SecurityGroup.new(sg.group_name, @environment)
         security_group.update_rules
       end
     end
@@ -45,8 +45,8 @@ module AwsSecurityCzar
     # Returns - SecurityGroup object 
     def self.lookup(query)
       @security_group_hash ||= security_groups.inject({}) do |hash, security_group|
-        hash[security_group.name] = security_group
-        hash[security_group.id] = security_group
+        hash[security_group.group_name] = security_group
+        hash[security_group.group_id] = security_group
         hash
       end
       @security_group_hash[query] 
@@ -56,7 +56,7 @@ module AwsSecurityCzar
     #
     # Returns - SecurityGroupCollection 
     def self.from_aws
-      @security_groups = ec2.security_groups
+      @security_groups = ec2.describe_security_groups.security_groups
     end
 
     # Private: Gets all the security groups with YAML files
@@ -86,7 +86,7 @@ module AwsSecurityCzar
     #
     # Returns - Array of all security group names not on AWS
     def self.missing_security_groups
-      config_security_groups - from_aws.map(&:name)
+      config_security_groups - from_aws.map(&:group_name)
     end
     private_class_method :missing_security_groups
 
@@ -101,7 +101,7 @@ module AwsSecurityCzar
         missing_groups.each do |name|
           security_group = SecurityGroup.new(name, environment)
           config = security_group.config
-          ec2.security_groups.create(name, vpc: config[:vpc], description: config[:description]) 
+          ec2.create_security_group(name, vpc: config[:vpc], description: config[:description])
           say "<%= color('#{name}', :green) %>"
         end
         say "\n"
@@ -195,7 +195,7 @@ module AwsSecurityCzar
 
     def current_rules(direction)
       security_group = self.class.lookup(name)
-      aws_security_group_rules = direction == :outbound ? security_group.egress_ip_permissions : security_group.ingress_ip_permissions
+      aws_security_group_rules = direction == :outbound ? security_group.ip_permissions_egress : security_group.ip_permissions
       Rule.rules_from_api(aws_security_group_rules, direction)
     end
     private :current_rules
