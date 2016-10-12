@@ -46,6 +46,7 @@ Each file in `config/` should match up with the name of a security group. Enter 
 ---
 description: App Servers for Taco Service
 vpc: <%= environment == "production" ? 'vpc-wsad' : 'vpc-asdf' %>
+region: <%= environment == "production" ? 'us-east-1' : 'us-west-2' %>
 inbound:
 -
   :zone: Private Subnet # Optional description
@@ -65,9 +66,12 @@ outbound: # Inbound and outbound rules are separate
 
 #### Update the rules on AWS:
 
+
 ```
-aws-security-czar update [env_name]
+aws-security-czar update [-r region_name] <environment_name>
 ```
+**Note:** If no region is specified `us-east-1` is assumed.
+
 
 ## Contributing
 
