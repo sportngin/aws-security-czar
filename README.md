@@ -66,11 +66,11 @@ outbound: # Inbound and outbound rules are separate
 
 #### Update the rules on AWS:
 
-**Note:** If no region is specified `us-east-1` is assumed.
 
 ```
 aws-security-czar update [-r region_name] <environment_name>
 ```
+**Note:** If no region is specified `us-east-1` is assumed.
 
 
 ## Contributing
