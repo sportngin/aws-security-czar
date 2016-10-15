@@ -11,10 +11,15 @@ module AwsSecurityCzar
           get_client Aws.const_get(service).const_get(:Client), options
         end
       end
+      undef_method :build_client_methods
     end
 
     def clients
       @clients ||= {}
+    end
+
+    def sessions
+      @sessions ||= {}
     end
 
     ### This module should only expose the actual clients. All supporting logic should be private.
@@ -34,52 +39,52 @@ module AwsSecurityCzar
 
     def authenticated(client, options)
       Aws.config.update(region: GlobalConfig.region, profile: GlobalConfig.profile)
-      Aws.config.update(Aws.config.merge(credentials: session_credentials)) if GlobalConfig.mfa
+      Aws.config.update(Aws.config.merge(credentials: session_credentials)) if (!options[:profile] && GlobalConfig.mfa)
+      options.merge(credentials: session_credentials(options[:profile])) if (options[:profile] && GlobalConfig.mfa)
       client.new(options)
     end
 
-    def session_credentials
-      clear_session if session_is_expired?
-
-      @session_credentials ||= Aws::Credentials.new(
-          session.credentials.access_key_id,
-          session.credentials.secret_access_key,
-          session.credentials.session_token
+    def session_credentials(profile = nil)
+      clear_session(profile) if session_is_expired?(profile)
+      Aws::Credentials.new(
+          session(profile).credentials.access_key_id,
+          session(profile).credentials.secret_access_key,
+          session(profile).credentials.session_token
       )
     end
 
-    def session
-      @session ||= Aws::STS::Client.new.get_session_token(
+    def session(profile = nil)
+      sessions[profile.to_s] ||= Aws::STS::Client.new(profile: profile).get_session_token(
           { duration_seconds: GlobalConfig.mfa_duration || 900,
-            serial_number: mfa_serial_number,
-            token_code: mfa_token
+            serial_number: mfa_serial_number(profile),
+            token_code: mfa_token(profile)
           }
       )
     end
 
-    def clear_session
-      @session, @session_credentials = nil, nil
+    def clear_session(profile = nil)
+      sessions.delete profile.to_s
     end
 
-    def session_is_expired?
-      session.credentials.expiration <= Time.now
+    def session_is_expired?(profile = nil)
+      session(profile).credentials.expiration <= Time.now
     end
 
-    def mfa_token
+    def mfa_token(profile = nil)
       cli = HighLine.new
-      cli.ask("Enter MFA Token for #{account_alias}:  ") { |q| q.validate = /^\d{6}$/ }
+      cli.ask("Enter MFA Token for #{account_alias(profile)}:  ") { |q| q.validate = /^\d{6}$/ }
     end
 
-    def mfa_serial_number
+    def mfa_serial_number(profile = nil)
       # Need to override the IAM client for this operation since we don't have an MFA session yet
-      iam = Aws::IAM::Client.new
+      iam = Aws::IAM::Client.new(profile: profile)
       mfa_devices = iam.list_mfa_devices(user_name: iam.get_user.user.user_name).mfa_devices
-      raise MfaNotConfigured, "MFA is not configured on your account! (Profile: #{GlobalConfig.profile}, IAM Org: #{account_alias})" unless mfa_devices.count > 0
+      raise MfaNotConfigured, "MFA is not configured on your account! (Profile: #{profile}, IAM Org: #{account_alias(profile)})" unless mfa_devices.count > 0
       mfa_devices.first.serial_number
     end
 
-    def account_alias
-      Aws::IAM::Client.new.list_account_aliases.account_aliases.first || "no alias"
+    def account_alias(profile = nil)
+      Aws::IAM::Client.new(profile: profile).list_account_aliases.account_aliases.first || "no alias"
     end
 
     def services_with_clients
